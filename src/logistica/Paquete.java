@@ -6,7 +6,6 @@ public class Paquete {
     private double kilos;
     private Estado estado;
 
-    // Minimo: solo codigo y kilos
     public Paquete(String codigo, double kilos) {
         this.codigo = codigo;
         this.detalle = "Sin detalle";
@@ -14,7 +13,6 @@ public class Paquete {
         this.estado = Estado.RECIBIDO;
     }
 
-    // Completo: codigo, detalle y kilos
     public Paquete(String codigo, String detalle, double kilos) {
         this.codigo = codigo;
         this.detalle = detalle;
@@ -22,23 +20,38 @@ public class Paquete {
         this.estado = Estado.RECIBIDO;
     }
 
-    public void pasarAPreparacion() {
-        cambiarEstado(Estado.RECIBIDO, Estado.EN_PREPARACION);
+    public boolean pasarAPreparacion() {
+        return cambiarEstado(Estado.RECIBIDO, Estado.EN_PREPARACION);
     }
 
-    public void pasarADistribucion() {
-        cambiarEstado(Estado.EN_PREPARACION, Estado.EN_DISTRIBUCION);
+    public boolean iniciarViaje() {
+        return cambiarEstado(Estado.EN_PREPARACION, Estado.EN_VIAJE);
     }
 
-    public void pasarAEntregado() {
-        cambiarEstado(Estado.EN_DISTRIBUCION, Estado.ENTREGADO);
+    public boolean entregar() {
+        return cambiarEstado(Estado.EN_VIAJE, Estado.ENTREGADO);
     }
 
-    // Solo el propio paquete controla si el cambio es valido
-    private void cambiarEstado(Estado desde, Estado hacia) {
-        if (estado == desde) {
-            estado = hacia;
+    private boolean cambiarEstado(Estado desde, Estado hacia) {
+        if (!transicionValida(desde, hacia)) {
+            System.out.println("Paquete " + codigo + ": no se puede pasar de "
+                    + estado + " a " + hacia);
+            return false;
         }
+        estado = hacia;
+        return true;
+    }
+
+    private boolean transicionValida(Estado desde, Estado hacia) {
+        return estado == desde;
+    }
+
+    public boolean estaEntregado() {
+        return estado == Estado.ENTREGADO;
+    }
+
+    public boolean estaEnViaje() {
+        return estado == Estado.EN_VIAJE;
     }
 
     public double getKilos() {

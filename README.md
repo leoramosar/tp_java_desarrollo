@@ -1,37 +1,55 @@
-# Trabajo Practico N1 - Sistema de Gestion de Envios
+# Sistema de Gestion de Envios (TP1 + TP2)
 
-## Estructura del proyecto
+Proyecto evolucionado: el TP2 se construye sobre el TP1 (no es un proyecto nuevo).
+
+## Estructura
 
 - `principal/App.java` → prueba del sistema
-- `logistica/Paquete.java` → el objeto que se transporta
-- `logistica/Estado.java` → etapas del ciclo de vida
-- `logistica/Envio.java` → clase base abstracta
-- `logistica/EnvioNormal.java` → envio estandar
-- `logistica/EnvioRapido.java` → envio express
-- `logistica/EnvioExterior.java` → envio internacional
+- `logistica/Paquete.java` → objeto transportado y sus estados
+- `logistica/Estado.java` → RECIBIDO / EN_PREPARACION / EN_VIAJE / ENTREGADO
+- `logistica/Envio.java` → clase base (paquetes, cliente, historial, reglas)
+- `logistica/EnvioNormal.java` / `EnvioRapido.java` / `EnvioExterior.java`
+- `logistica/Cliente.java` → quien solicita envios
+- `logistica/Sucursal.java` → recibe y despacha envios
+- `logistica/Movimiento.java` → un acontecimiento del recorrido
 
-## Preguntas de reflexion
+## Como se relacionan (TP2)
+
+1. Un **Cliente** puede tener varios envios (`List<Envio>`).
+2. Una **Sucursal** recibe/despacha: le manda mensajes al **Envio**.
+3. El **Envio** actualiza paquetes y guarda **Movimientos** en su historial.
+4. Las validaciones viven cerca del objeto que conoce el estado (Paquete/Envio), no en App con muchos if.
+
+## Preguntas de reflexion (TP1)
 
 ### 1. ¿Que responsabilidades asignaste a cada objeto?
 
-Al **Paquete** le di guardar codigo, detalle, kilos y estado. El mismo paquete cambia de etapa con pasarAPreparacion, pasarADistribucion y pasarAEntregado.
+Al **Paquete** le di guardar codigo, detalle, kilos y estado. El mismo paquete cambia de etapa.
 
-Al **Envio** le di juntar hasta 3 paquetes, comenzar/completar el recorrido y calcular el costo. Como hay tres tipos, Envio es abstracta y cada clase hija responde distinto a calcularCosto y tipo.
+Al **Envio** le di juntar hasta 3 paquetes, coordinar el recorrido y calcular el costo. Como hay tres tipos, Envio es abstracta.
 
-En **App** creo los objetos, los relaciono, los meto en una lista de la jornada y muestro un resumen.
+En **App** creo los objetos, los relaciono y muestro resultados.
 
 ### 2. ¿Que decisiones te resultaron dificiles?
 
-Me costo armar bien el cambio de estados sin usar setters. Tambien pensar como no repetir el calculo de kilos en cada tipo de envio: por eso arme sumarPorKilos en la clase padre. El ArrayList en App al principio me confundo, pero despues se entiende al recorrer la jornada.
+Me costo armar bien el cambio de estados sin setters y entender la herencia para el calculo de costos.
 
 ### 3. ¿Que metodos decidiste hacer privados y por que?
 
-En Paquete, `cambiarEstado` es privado porque es una regla interna: solo se usa desde los metodos publicos del mismo paquete. En Envio, `tienePesoCorrecto` tambien es privado: sirve solo al cargar un paquete y no hace falta exponerlo.
+En Paquete, `cambiarEstado` y `transicionValida` son privados. En Envio, cosas como `registrarMovimiento`, `puedeOperar` y `tienePaquetes` tambien: son reglas internas.
 
 ### 4. ¿Que setters evitaste implementar y por que?
 
-No hice setEstado ni setKilos. Si existiera setEstado, se podria pasar de RECIBIDO a ENTREGADO de un salto y romper el flujo real del negocio. Prefiero que el estado cambie solo con los metodos del ciclo.
+No hice setEstado. Si existiera, se podria saltar etapas. El estado cambia solo con metodos del negocio.
 
 ### 5. ¿Que codigo tuviste que cambiar al incorporar herencia?
 
-Pase Envio a abstracta, agregue calcularCosto y tipo como metodos abstractos, y cree EnvioNormal, EnvioRapido y EnvioExterior. Cada una calcula distinto sin usar if por tipo.
+Pase Envio a abstracta y cree EnvioNormal, EnvioRapido y EnvioExterior.
+
+## Decisiones del TP2 (resumen)
+
+- **Cliente**: guarda documento, nombre y su lista de envios. El registra con `registrarEnvio`.
+- **Sucursal**: no cambia estados a mano; llama a `recibirEn` / `despacharDesde` del envio.
+- **Movimiento**: guarda que paso y donde (alcanza para reconstruir el recorrido).
+- **Historial**: lo administra el propio Envio (`mostrarHistorial`, sucursales, ultimo movimiento).
+- **Validaciones**: no entregar sin estar EN_VIAJE, no operar un envio ya entregado, no recibir sin paquetes.

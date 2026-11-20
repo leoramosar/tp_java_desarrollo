@@ -18,158 +18,86 @@ public abstract class Envio {
         this.finalizado = false;
     }
 
-    public Envio(String codigo, Paquete paquete) {
+    public Envio(String codigo, Paquete paquete) throws OperacionInvalidaException {
         this(codigo);
         cargarPaquete(paquete);
     }
 
-    public void cargarPaquete(Paquete paquete) {
-        if (finalizado) {
-            System.out.println("El envio " + codigo + " ya esta entregado. No se agregan paquetes.");
-            return;
+    public void cargarPaquete(Paquete paquete) throws OperacionInvalidaException {
+        if (!todaviaNoSalio()) {
+            throw new OperacionInvalidaException(
+                    "El envio " + codigo + " ya salio. No se agregan paquetes.");
         }
-        if (listaPaquetes.size() >= 3) {
-            System.out.println("El envio " + codigo + " ya tiene 3 paquetes.");
-            return;
+        if (!hayLugar()) {
+            throw new OperacionInvalidaException(
+                    "El envio " + codigo + " ya tiene el maximo de 3 paquetes.");
         }
         if (!tienePesoCorrecto(paquete)) {
-            System.out.println("Peso incorrecto en " + paquete.getCodigo());
-            return;
+            throw new OperacionInvalidaException(
+                    "Peso incorrecto en el paquete " + paquete.getCodigo());
         }
         listaPaquetes.add(paquete);
     }
 
-    // Relacion Cliente <-> Envio
-    public void asignarCliente(Cliente cliente) {
+    public void asignarCliente(Cliente cliente) throws OperacionInvalidaException {
         if (cliente == null) {
-            System.out.println("Cliente invalido para el envio " + codigo);
-            return;
+            throw new OperacionInvalidaException(
+                    "Cliente invalido para el envio " + codigo);
         }
         this.cliente = cliente;
         cliente.registrarEnvio(this);
     }
 
-    // Llega a una sucursal
-    public void recibirEn(Sucursal sucursal) {
-        if (!puedeOperar()) {
-            return;
-        }
-        if (!tienePaquetes()) {
-            System.out.println("No se puede recibir el envio " + codigo + " sin paquetes.");
-            return;
-        }
+    public void recibirEn(Sucursal sucursal) throws OperacionInvalidaException {
+        validarQuePuedeOperar();
+        validarQueTienePaquetes();
 
         this.sucursalActual = sucursal;
-
-        // Primera sucursal: los paquetes pasan a preparacion
-        for (Paquete p : listaPaquetes) {
-            if (p.getEstado() == Estado.RECIBIDO) {
-                p.pasarAPreparacion();
-            }
-        }
-
-        registrarMovimiento("Envio recibido", sucursal.descripcion());
-        System.out.println("Envio " + codigo + " recibido en " + sucursal.descripcion());
+        prepararPaquetesAlRecibir();
+        registrarMovimiento(TipoMovimiento.RECIBIDO_EN_SUCURSAL, sucursal);
     }
 
-    // Sale de la sucursal actual
-    public void despacharDesde(Sucursal sucursal) {
-        if (!puedeOperar()) {
-            return;
-        }
-        if (sucursalActual == null || !sucursalActual.getNombre().equals(sucursal.getNombre())) {
-            System.out.println("El envio " + codigo + " no esta en " + sucursal.descripcion());
-            return;
-        }
-
-        boolean ok = true;
-        for (Paquete p : listaPaquetes) {
-            if (p.getEstado() == Estado.EN_PREPARACION) {
-                ok = p.iniciarViaje() && ok;
-            } else if (p.getEstado() != Estado.EN_VIAJE) {
-                System.out.println("No se puede despachar. Paquete " + p.getCodigo()
-                        + " esta en " + p.getEstado());
-                ok = false;
-            }
-        }
-
-        if (!ok) {
-            return;
-        }
-
-        registrarMovimiento("Envio despachado", sucursal.descripcion());
-        System.out.println("Envio " + codigo + " despachado desde " + sucursal.descripcion());
+    public void despacharDesde(Sucursal sucursal) throws OperacionInvalidaException {
+        validarQuePuedeOperar();
+        validarQueEstaEnSucursal(sucursal);
+        ponerPaquetesEnViaje();
+        registrarMovimiento(TipoMovimiento.DESPACHADO_DESDE_SUCURSAL, sucursal);
     }
 
-    // Llega al destino final
-    public void entregar() {
-        if (finalizado) {
-            System.out.println("El envio " + codigo + " ya fue entregado.");
-            return;
+    public void entregar() throws OperacionInvalidaException {
+        if (estaFinalizado()) {
+            throw new OperacionInvalidaException(
+                    "El envio " + codigo + " ya fue entregado.");
         }
-        if (!tienePaquetes()) {
-            System.out.println("No se puede entregar el envio " + codigo + " sin paquetes.");
-            return;
-        }
-
-        boolean ok = true;
-        for (Paquete p : listaPaquetes) {
-            if (!p.estaEnViaje()) {
-                System.out.println("No se puede entregar. Paquete " + p.getCodigo()
-                        + " no esta EN_VIAJE (estado: " + p.getEstado() + ")");
-                ok = false;
-            }
-        }
-        if (!ok) {
-            return;
-        }
-
-        for (Paquete p : listaPaquetes) {
-            p.entregar();
-        }
+        validarQueTienePaquetes();
+        entregarPaquetes();
 
         finalizado = true;
         sucursalActual = null;
-        registrarMovimiento("Envio entregado", "Destino");
-        System.out.println("Envio " + codigo + " entregado.");
+        registrarMovimiento(TipoMovimiento.ENTREGADO, null);
     }
 
-    public void mostrarHistorial() {
-        System.out.println("Historial del envio " + codigo + ":");
-        if (historial.isEmpty()) {
-            System.out.println("  (sin movimientos)");
-            return;
-        }
-        for (Movimiento m : historial) {
-            System.out.println("  - " + m);
-        }
+    // Consultas: devuelven datos (App los muestra)
+    public List<Movimiento> obtenerHistorial() {
+        return historial;
     }
 
-    public void mostrarSucursalesRecorridas() {
-        System.out.println("Sucursales del envio " + codigo + ":");
-        List<String> vistas = new ArrayList<>();
+    public List<Sucursal> obtenerSucursalesRecorridas() {
+        List<Sucursal> sucursales = new ArrayList<>();
         for (Movimiento m : historial) {
-            String lugar = m.getDonde();
-            if (lugar.equals("Destino")) {
-                continue;
-            }
-            if (!vistas.contains(lugar)) {
-                vistas.add(lugar);
-                System.out.println("  - " + lugar);
+            if (m.tieneSucursal() && !sucursales.contains(m.getSucursal())) {
+                sucursales.add(m.getSucursal());
             }
         }
-        if (vistas.isEmpty()) {
-            System.out.println("  (todavia no paso por sucursales)");
-        }
+        return sucursales;
     }
 
-    public void mostrarUltimoMovimiento() {
+    public Movimiento obtenerUltimoMovimiento() throws OperacionInvalidaException {
         if (historial.isEmpty()) {
-            System.out.println("El envio " + codigo + " no tiene movimientos.");
-            return;
+            throw new OperacionInvalidaException(
+                    "El envio " + codigo + " no tiene movimientos.");
         }
-        Movimiento ultimo = historial.get(historial.size() - 1);
-        System.out.println("Ultimo movimiento de " + codigo + ": " + ultimo);
+        return historial.get(historial.size() - 1);
     }
 
     public abstract double calcularCosto();
@@ -184,16 +112,76 @@ public abstract class Envio {
         return suma;
     }
 
-    private void registrarMovimiento(String quePaso, String donde) {
-        historial.add(new Movimiento(quePaso, donde));
+    private void prepararPaquetesAlRecibir() throws OperacionInvalidaException {
+        for (Paquete p : listaPaquetes) {
+            if (p.estaRecibido()) {
+                p.pasarAPreparacion();
+            }
+        }
     }
 
-    private boolean puedeOperar() {
-        if (finalizado) {
-            System.out.println("Operacion invalida: el envio " + codigo + " ya fue entregado.");
-            return false;
+    private void ponerPaquetesEnViaje() throws OperacionInvalidaException {
+        for (Paquete p : listaPaquetes) {
+            if (p.estaEnPreparacion()) {
+                p.iniciarViaje();
+            } else if (!p.estaEnViaje()) {
+                throw new OperacionInvalidaException(
+                        "No se puede despachar. Paquete " + p.getCodigo()
+                                + " esta en " + p.getEstado());
+            }
         }
-        return true;
+    }
+
+    private void entregarPaquetes() throws OperacionInvalidaException {
+        for (Paquete p : listaPaquetes) {
+            p.entregar();
+        }
+    }
+
+    private void registrarMovimiento(TipoMovimiento tipo, Sucursal sucursal)
+            throws OperacionInvalidaException {
+        if (tipo == null) {
+            throw new OperacionInvalidaException("Movimiento incoherente: tipo nulo.");
+        }
+        if (tipo == TipoMovimiento.ENTREGADO) {
+            historial.add(new Movimiento(tipo));
+            return;
+        }
+        if (sucursal == null) {
+            throw new OperacionInvalidaException(
+                    "Movimiento incoherente: falta la sucursal.");
+        }
+        historial.add(new Movimiento(tipo, sucursal));
+    }
+
+    private void validarQuePuedeOperar() throws OperacionInvalidaException {
+        if (estaFinalizado()) {
+            throw new OperacionInvalidaException(
+                    "Operacion invalida: el envio " + codigo + " ya fue entregado.");
+        }
+    }
+
+    private void validarQueTienePaquetes() throws OperacionInvalidaException {
+        if (!tienePaquetes()) {
+            throw new OperacionInvalidaException(
+                    "El envio " + codigo + " no tiene paquetes.");
+        }
+    }
+
+    private void validarQueEstaEnSucursal(Sucursal sucursal)
+            throws OperacionInvalidaException {
+        if (sucursalActual == null || !sucursalActual.getNombre().equals(sucursal.getNombre())) {
+            throw new OperacionInvalidaException(
+                    "El envio " + codigo + " no esta en " + sucursal.descripcion());
+        }
+    }
+
+    private boolean hayLugar() {
+        return listaPaquetes.size() < 3;
+    }
+
+    private boolean todaviaNoSalio() {
+        return !finalizado && sucursalActual == null && historial.isEmpty();
     }
 
     private boolean tienePaquetes() {
@@ -220,16 +208,13 @@ public abstract class Envio {
         return finalizado;
     }
 
-    public void mostrarResumen() {
+    public String resumen() {
         String nombreCliente = (cliente == null) ? "sin cliente" : cliente.getNombre();
-        System.out.println(tipo() + " " + codigo
+        return tipo() + " " + codigo
                 + " | cliente: " + nombreCliente
                 + " | costo: " + calcularCosto()
                 + " | paquetes: " + listaPaquetes.size()
-                + " | entregado: " + finalizado);
-        for (Paquete p : listaPaquetes) {
-            System.out.println("   - " + p);
-        }
+                + " | entregado: " + finalizado;
     }
 
     public String toString() {

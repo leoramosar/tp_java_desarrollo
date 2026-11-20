@@ -20,38 +20,44 @@ public class Paquete {
         this.estado = Estado.RECIBIDO;
     }
 
-    public boolean pasarAPreparacion() {
-        return cambiarEstado(Estado.RECIBIDO, Estado.EN_PREPARACION);
-    }
-
-    public boolean iniciarViaje() {
-        return cambiarEstado(Estado.EN_PREPARACION, Estado.EN_VIAJE);
-    }
-
-    public boolean entregar() {
-        return cambiarEstado(Estado.EN_VIAJE, Estado.ENTREGADO);
-    }
-
-    private boolean cambiarEstado(Estado desde, Estado hacia) {
-        if (!transicionValida(desde, hacia)) {
-            System.out.println("Paquete " + codigo + ": no se puede pasar de "
-                    + estado + " a " + hacia);
-            return false;
+    public void pasarAPreparacion() throws OperacionInvalidaException {
+        if (!estaRecibido()) {
+            throw new OperacionInvalidaException(
+                    "Paquete " + codigo + " no puede pasar a preparacion desde " + estado);
         }
-        estado = hacia;
-        return true;
+        estado = Estado.EN_PREPARACION;
     }
 
-    private boolean transicionValida(Estado desde, Estado hacia) {
-        return estado == desde;
+    public void iniciarViaje() throws OperacionInvalidaException {
+        if (!estaEnPreparacion()) {
+            throw new OperacionInvalidaException(
+                    "Paquete " + codigo + " no puede iniciar viaje desde " + estado);
+        }
+        estado = Estado.EN_VIAJE;
     }
 
-    public boolean estaEntregado() {
-        return estado == Estado.ENTREGADO;
+    public void entregar() throws OperacionInvalidaException {
+        if (!estaEnViaje()) {
+            throw new OperacionInvalidaException(
+                    "Paquete " + codigo + " no puede entregarse desde " + estado);
+        }
+        estado = Estado.ENTREGADO;
+    }
+
+    public boolean estaRecibido() {
+        return estado == Estado.RECIBIDO;
+    }
+
+    public boolean estaEnPreparacion() {
+        return estado == Estado.EN_PREPARACION;
     }
 
     public boolean estaEnViaje() {
         return estado == Estado.EN_VIAJE;
+    }
+
+    public boolean estaEntregado() {
+        return estado == Estado.ENTREGADO;
     }
 
     public double getKilos() {

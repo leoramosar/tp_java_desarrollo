@@ -9,20 +9,18 @@ public class Sucursal {
         this.ciudad = ciudad;
     }
 
-    // La sucursal recibe el mensaje y le pide al envio que se actualice
-    public void recibirEnvio(Envio envio) {
+    public void recibirEnvio(Envio envio) throws OperacionInvalidaException {
         if (envio == null) {
-            System.out.println("No hay envio para recibir en " + nombre);
-            return;
+            throw new OperacionInvalidaException(
+                    "No se puede recibir un envio inexistente en " + nombre);
         }
         envio.recibirEn(this);
     }
 
-    // La sucursal despacha y el envio coordina sus paquetes e historial
-    public void despacharEnvio(Envio envio) {
+    public void despacharEnvio(Envio envio) throws OperacionInvalidaException {
         if (envio == null) {
-            System.out.println("No hay envio para despachar desde " + nombre);
-            return;
+            throw new OperacionInvalidaException(
+                    "No se puede despachar un envio inexistente desde " + nombre);
         }
         envio.despacharDesde(this);
     }

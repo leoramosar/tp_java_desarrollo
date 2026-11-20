@@ -6,13 +6,12 @@ public class EnvioRapido extends Envio {
         super(codigo);
     }
 
-    public EnvioRapido(String codigo, Paquete paquete) {
+    public EnvioRapido(String codigo, Paquete paquete) throws OperacionInvalidaException {
         super(codigo, paquete);
     }
 
     @Override
     public double calcularCosto() {
-        // Rapido: 80 por kilo + 40% de recargo
         return sumarPorKilos(80) * 1.4;
     }
 

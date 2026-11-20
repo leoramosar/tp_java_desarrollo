@@ -6,13 +6,12 @@ public class EnvioNormal extends Envio {
         super(codigo);
     }
 
-    public EnvioNormal(String codigo, Paquete paquete) {
+    public EnvioNormal(String codigo, Paquete paquete) throws OperacionInvalidaException {
         super(codigo, paquete);
     }
 
     @Override
     public double calcularCosto() {
-        // Precio simple: 80 por kilo
         return sumarPorKilos(80);
     }
 

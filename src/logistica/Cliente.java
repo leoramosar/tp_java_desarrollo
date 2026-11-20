@@ -14,24 +14,15 @@ public class Cliente {
         this.envios = new ArrayList<>();
     }
 
-    // El propio cliente registra que hizo un envio nuevo
-    public void registrarEnvio(Envio envio) {
+    public void registrarEnvio(Envio envio) throws OperacionInvalidaException {
         if (envio == null) {
-            System.out.println("No se puede registrar un envio nulo.");
-            return;
+            throw new OperacionInvalidaException("No se puede registrar un envio inexistente.");
         }
         envios.add(envio);
     }
 
-    public void mostrarEnvios() {
-        System.out.println("Envios de " + nombre + " (" + documento + "):");
-        if (envios.isEmpty()) {
-            System.out.println("  (sin envios)");
-            return;
-        }
-        for (Envio envio : envios) {
-            System.out.println("  - " + envio.getCodigo() + " (" + envio.tipo() + ")");
-        }
+    public List<Envio> obtenerEnvios() {
+        return envios;
     }
 
     public String getDocumento() {

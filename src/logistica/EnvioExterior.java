@@ -6,13 +6,12 @@ public class EnvioExterior extends Envio {
         super(codigo);
     }
 
-    public EnvioExterior(String codigo, Paquete paquete) {
+    public EnvioExterior(String codigo, Paquete paquete) throws OperacionInvalidaException {
         super(codigo, paquete);
     }
 
     @Override
     public double calcularCosto() {
-        // Exterior: 80 por kilo + 80% de recargo
         return sumarPorKilos(80) * 1.8;
     }
 

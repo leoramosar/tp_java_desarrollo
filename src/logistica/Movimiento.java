@@ -1,23 +1,37 @@
 package logistica;
 
 public class Movimiento {
-    private String quePaso;
-    private String donde;
+    private TipoMovimiento tipo;
+    private Sucursal sucursal;
 
-    public Movimiento(String quePaso, String donde) {
-        this.quePaso = quePaso;
-        this.donde = donde;
+    // Recibido o despachado en una sucursal
+    public Movimiento(TipoMovimiento tipo, Sucursal sucursal) {
+        this.tipo = tipo;
+        this.sucursal = sucursal;
     }
 
-    public String getQuePaso() {
-        return quePaso;
+    // Entrega final (sin sucursal)
+    public Movimiento(TipoMovimiento tipo) {
+        this.tipo = tipo;
+        this.sucursal = null;
     }
 
-    public String getDonde() {
-        return donde;
+    public TipoMovimiento getTipo() {
+        return tipo;
+    }
+
+    public Sucursal getSucursal() {
+        return sucursal;
+    }
+
+    public boolean tieneSucursal() {
+        return sucursal != null;
     }
 
     public String toString() {
-        return quePaso + " | lugar: " + donde;
+        if (tieneSucursal()) {
+            return tipo + " en " + sucursal.descripcion();
+        }
+        return tipo + " en Destino";
     }
 }

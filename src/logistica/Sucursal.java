@@ -1,28 +1,60 @@
 package logistica;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+
 public class Sucursal {
+    private String codigo;
     private String nombre;
     private String ciudad;
+    // Cola FIFO: los envios esperan turno para salir en el camion
+    private Queue<Envio> colaDespacho;
 
-    public Sucursal(String nombre, String ciudad) {
+    public Sucursal(String codigo, String nombre, String ciudad) {
+        this.codigo = codigo;
         this.nombre = nombre;
         this.ciudad = ciudad;
+        this.colaDespacho = new ArrayDeque<>();
     }
 
+    // Recibe el envio (negocio) y lo pone al final de la cola
     public void recibirEnvio(Envio envio) throws OperacionInvalidaException {
         if (envio == null) {
             throw new OperacionInvalidaException(
                     "No se puede recibir un envio inexistente en " + nombre);
         }
         envio.recibirEn(this);
+        colaDespacho.offer(envio);
     }
 
-    public void despacharEnvio(Envio envio) throws OperacionInvalidaException {
-        if (envio == null) {
+    // Sale como maximo "cantidad" envios, en orden de llegada
+    public List<Envio> despachar(int cantidad) throws OperacionInvalidaException {
+        if (colaDespacho.isEmpty()) {
             throw new OperacionInvalidaException(
-                    "No se puede despachar un envio inexistente desde " + nombre);
+                    "La cola de " + nombre + " esta vacia. No hay nada para despachar.");
         }
-        envio.despacharDesde(this);
+
+        List<Envio> salieron = new ArrayList<>();
+        int salidas = 0;
+
+        while (salidas < cantidad && !colaDespacho.isEmpty()) {
+            Envio envio = colaDespacho.poll();
+            envio.despacharDesde(this);
+            salieron.add(envio);
+            salidas++;
+        }
+
+        return salieron;
+    }
+
+    public int cantidadEnCola() {
+        return colaDespacho.size();
+    }
+
+    public String getCodigo() {
+        return codigo;
     }
 
     public String getNombre() {
@@ -38,6 +70,6 @@ public class Sucursal {
     }
 
     public String toString() {
-        return descripcion();
+        return codigo + " - " + descripcion();
     }
 }

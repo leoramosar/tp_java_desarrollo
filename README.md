@@ -1,31 +1,28 @@
-# Sistema de Gestion de Envios (TP1 + TP2 + TP2.1)
+# Sistema de Gestion de Envios (TP1 → TP4)
 
-Proyecto evolucionado. El TP2.1 corrige y completa el TP2 (no es un trabajo nuevo).
+Proyecto evolucionado. El TP4 agrega estructuras de datos sobre el sistema del TP2/TP2.1.
 
 ## Estructura
 
-- `principal/App.java` → prueba del sistema
-- `logistica/Paquete.java` / `Estado.java`
-- `logistica/Envio.java` (+ Normal / Rapido / Exterior)
-- `logistica/Cliente.java` / `Sucursal.java`
-- `logistica/Movimiento.java` + `TipoMovimiento.java`
-- `logistica/OperacionInvalidaException.java`
-- `DIAGRAMAS.md` → diagrama de clases + 2 de secuencia (exportar en mermaid.live)
+- `principal/App.java` → crea el `RegistroCentral` y prueba el sistema
+- `logistica/RegistroCentral.java` → guarda, busca y lista (no hace negocio)
+- `logistica/Sucursal.java` → cola FIFO de despacho (`Queue`)
+- `logistica/Cliente.java` / `Envio*.java` / `Paquete.java` / `Movimiento.java` ...
+- `TEORICO_TP4.md` → respuestas teóricas (exportar a PDF para entregar)
+- `DIAGRAMAS.md` → diagramas del TP2.1 (si hacen falta)
 
-## Correcciones TP2.1
+## Qué aporta el TP4 (práctico)
 
-1. **Movimiento**: el tipo NO es un String. Usa `TipoMovimiento` (enum del dominio) + sucursal.
-2. **Consultas**: `obtenerHistorial()`, `obtenerSucursalesRecorridas()`, `obtenerUltimoMovimiento()` devuelven datos; App muestra.
-3. **Excepciones**: operaciones invalidas lanzan `OperacionInvalidaException`.
-4. **Metodos privados**: `hayLugar()`, `todaviaNoSalio()`, validaciones y pasos internos.
-5. **Estados**: cada cambio esta en un metodo del Paquete (sin cadena larga de if/else).
+| Parte | Qué hay |
+|-------|---------|
+| 1 | `RegistroCentral` (una instancia en el main) |
+| 2 | Envios en `HashMap<Integer, Envio>` + sucursales en `HashMap` |
+| 3 | `Queue` en cada sucursal: `recibirEnvio` / `despachar(cantidad)` |
+| 4.a | `buscarClienteSecuencial(int dni)` sobre `ArrayList` |
 
-## Flujo de colaboracion
+Regla: el registro **busca**; `Envio` / `Sucursal` **hacen** la accion (`entregar`, `despachar`, etc.).
 
-`App → Sucursal → Envio → Paquete` (+ registro de `Movimiento` en el historial del envio)
+## Entrega TP4
 
-## Entrega
-
-- Codigo en repositorio online
-- Diagrama de clases (grafico)
-- 2 diagramas de secuencia (grafico) → ver `DIAGRAMAS.md`
+1. Codigo del proyecto (partes 1, 2, 3 y 4.a)
+2. PDF con la teoria → exportar `TEORICO_TP4.md` a PDF

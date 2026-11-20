@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Cliente {
-    private String documento;
+    private int dni;
     private String nombre;
     private List<Envio> envios;
 
-    public Cliente(String documento, String nombre) {
-        this.documento = documento;
+    public Cliente(int dni, String nombre) {
+        this.dni = dni;
         this.nombre = nombre;
         this.envios = new ArrayList<>();
     }
@@ -25,8 +25,8 @@ public class Cliente {
         return envios;
     }
 
-    public String getDocumento() {
-        return documento;
+    public int getDni() {
+        return dni;
     }
 
     public String getNombre() {
@@ -38,6 +38,6 @@ public class Cliente {
     }
 
     public String toString() {
-        return nombre + " [" + documento + "]";
+        return nombre + " [DNI " + dni + "]";
     }
 }

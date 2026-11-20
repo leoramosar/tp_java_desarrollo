@@ -2,11 +2,11 @@ package logistica;
 
 public class EnvioNormal extends Envio {
 
-    public EnvioNormal(String codigo) {
+    public EnvioNormal(int codigo) {
         super(codigo);
     }
 
-    public EnvioNormal(String codigo, Paquete paquete) throws OperacionInvalidaException {
+    public EnvioNormal(int codigo, Paquete paquete) throws OperacionInvalidaException {
         super(codigo, paquete);
     }
 

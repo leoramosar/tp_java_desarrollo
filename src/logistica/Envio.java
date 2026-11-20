@@ -4,21 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class Envio {
-    private String codigo;
+    private int codigo;
     private List<Paquete> listaPaquetes;
     private Cliente cliente;
     private Sucursal sucursalActual;
     private List<Movimiento> historial;
     private boolean finalizado;
 
-    public Envio(String codigo) {
+    public Envio(int codigo) {
         this.codigo = codigo;
         this.listaPaquetes = new ArrayList<>();
         this.historial = new ArrayList<>();
         this.finalizado = false;
     }
 
-    public Envio(String codigo, Paquete paquete) throws OperacionInvalidaException {
+    public Envio(int codigo, Paquete paquete) throws OperacionInvalidaException {
         this(codigo);
         cargarPaquete(paquete);
     }
@@ -196,7 +196,7 @@ public abstract class Envio {
         return listaPaquetes;
     }
 
-    public String getCodigo() {
+    public int getCodigo() {
         return codigo;
     }
 
